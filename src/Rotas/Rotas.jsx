@@ -16,6 +16,8 @@ export function Rotas() {
                 <Route path="camera" element={<Camera />} />
                 <Route path="galeria" element={<Galeria />} /> 
                 <Route path="inventario" element={<Inventario />} />
+                <Route path="geolocalizacao" element={<Geolocalizacao />} />
+
             </Route>   
         </Routes>
     );

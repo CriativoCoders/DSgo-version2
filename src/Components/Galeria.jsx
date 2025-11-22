@@ -1,188 +1,107 @@
 import { useState, useEffect } from "react";
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
-import ImageListItemBar from '@mui/material/ImageListItemBar';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 export function Galeria() {
     const [fotos, setFotos] = useState([]);
 
-    // Função para carregar fotos do localStorage
+    // Função para carregar fotos
     const carregarFotos = () => {
-        const fotosSalvas = localStorage.getItem('fotosTiradas');
-        console.log('🔄 Recarregando fotos:', fotosSalvas);
-        if (fotosSalvas) {
-            setFotos(JSON.parse(fotosSalvas));
-        } else {
+        try {
+            const fotosSalvas = localStorage.getItem('fotosTiradas');
+            if (fotosSalvas) {
+                const fotosArray = JSON.parse(fotosSalvas);
+                console.log('📸 Fotos carregadas:', fotosArray.length);
+                setFotos(fotosArray);
+            } else {
+                setFotos([]);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar fotos:', error);
             setFotos([]);
         }
     };
 
     useEffect(() => {
-        // Carrega na inicialização
+        // Carregar fotos inicialmente
         carregarFotos();
 
-        // Escuta mudanças no localStorage (funciona entre abas)
-        const handleStorageChange = (e) => {
-            if (e.key === 'fotosTiradas') {
-                console.log('📢 localStorage mudou!');
-                carregarFotos();
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-
-        // Escuta evento customizado (funciona na mesma aba)
-        const handleFotoAdicionada = () => {
-            console.log('📸 Nova foto detectada!');
+        // Escutar evento de atualização
+        const handleFotosAtualizadas = () => {
+            console.log('🔄 Evento de atualização recebido!');
             carregarFotos();
         };
 
-        window.addEventListener('fotoAdicionada', handleFotoAdicionada);
+        window.addEventListener('fotosAtualizadas', handleFotosAtualizadas);
 
-        // Intervalo de verificação (fallback)
-        const interval = setInterval(() => {
-            const fotosAtuais = JSON.parse(localStorage.getItem('fotosTiradas') || '[]');
-            if (fotosAtuais.length !== fotos.length) {
-                console.log('🔍 Diferença detectada no polling');
+        // Também escutar mudanças no storage (para outras abas)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'fotosTiradas') {
                 carregarFotos();
             }
-        }, 2000); // Verifica a cada 2 segundos
+        });
 
-        // Cleanup
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('fotoAdicionada', handleFotoAdicionada);
-            clearInterval(interval);
+            window.removeEventListener('fotosAtualizadas', handleFotosAtualizadas);
+            window.removeEventListener('storage', carregarFotos);
         };
-    }, [fotos.length]);
+    }, []);
 
-    // Função para deletar foto
     const deletarFoto = (id) => {
         const novasFotos = fotos.filter(foto => foto.id !== id);
         setFotos(novasFotos);
         localStorage.setItem('fotosTiradas', JSON.stringify(novasFotos));
+        window.dispatchEvent(new Event('fotosAtualizadas'));
     };
 
-    // Função para deletar todas as fotos
     const deletarTodasFotos = () => {
-        setFotos([]);
-        localStorage.removeItem('fotosTiradas');
+        if (window.confirm("Tem certeza que deseja deletar TODAS as fotos?")) {
+            setFotos([]);
+            localStorage.removeItem('fotosTiradas');
+            window.dispatchEvent(new Event('fotosAtualizadas'));
+        }
     };
 
+    // Componente de galeria simples sem Material-UI
     if (fotos.length === 0) {
         return (
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    height: '60vh',
-                    textAlign: 'center',
-                    padding: 3
-                }}
-            >
-                <PhotoCameraIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h5" color="text.secondary" gutterBottom>
-                    Galeria Vazia
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Tire algumas fotos usando a câmera para vê-las aqui!
-                </Typography>
-            </Box>
+            <div className="galeria-vazia">
+                <div className="icone-camera">📷</div>
+                <h2>Galeria Vazia</h2>
+                <p>Tire algumas fotos usando a câmera para vê-las aqui!</p>
+            </div>
         );
     }
 
     return (
-        <Box sx={{ padding: 3 }}>
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                mb: 3,
-                flexWrap: 'wrap',
-                gap: 2
-            }}>
-                <Typography variant="h4" component="h1">
-                    Minha Galeria
-                </Typography>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="h6" color="primary">
+        <div className="galeria-container">
+            <div className="galeria-header">
+                <h1>Minha Galeria</h1>
+                <div className="galeria-info">
+                    <span className="contador-fotos">
                         {fotos.length} {fotos.length === 1 ? 'foto' : 'fotos'}
-                    </Typography>
-                    
-                    <Button 
-                        variant="outlined" 
-                        color="error"
-                        startIcon={<DeleteSweepIcon />}
-                        onClick={deletarTodasFotos}
-                        size="small"
-                    >
-                        Limpar Tudo
-                    </Button>
-                </Box>
-            </Box>
+                    </span>
+                    <button onClick={deletarTodasFotos} className="btn-limpar-tudo">
+                        🗑️ Limpar Tudo
+                    </button>
+                </div>
+            </div>
 
-            <ImageList 
-                sx={{ 
-                    width: '100%', 
-                    height: 'auto',
-                    margin: 0
-                }} 
-                cols={3} 
-                gap={8}
-            >
-                {fotos.map((foto) => (
-                    <ImageListItem 
-                        key={foto.id}
-                        sx={{
-                            borderRadius: 2,
-                            overflow: 'hidden',
-                            boxShadow: 3,
-                            transition: 'transform 0.2s',
-                            '&:hover': {
-                                transform: 'scale(1.02)',
-                            }
-                        }}
-                    >
-                        <img
-                            srcSet={`${foto.src}?w=248&fit=crop&auto=format&dpr=2 2x`}
-                            src={`${foto.src}?w=248&fit=crop&auto=format`}
-                            alt={`Foto ${foto.id}`}
-                            loading="lazy"
-                            style={{
-                                width: '100%',
-                                height: 200,
-                                objectFit: 'cover'
-                            }}
-                        />
-                        <ImageListItemBar
-                            title={`Foto ${fotos.indexOf(foto) + 1}`}
-                            subtitle={foto.data}
-                            actionIcon={
-                                <IconButton
-                                    sx={{ color: 'white' }}
-                                    onClick={() => deletarFoto(foto.id)}
-                                    size="small"
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            }
-                            sx={{
-                                background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)'
-                            }}
-                        />
-                    </ImageListItem>
+            <div className="galeria-grid">
+                {fotos.map((foto, index) => (
+                    <div key={foto.id} className="foto-item">
+                        <img src={foto.src} alt={`Foto ${index + 1}`} />
+                        <div className="foto-info">
+                            <span>Foto {index + 1}</span>
+                            <span>{foto.data}</span>
+                            <button 
+                                onClick={() => deletarFoto(foto.id)}
+                                className="btn-deletar"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
                 ))}
-            </ImageList>
-        </Box>
+            </div>
+        </div>
     );
 }

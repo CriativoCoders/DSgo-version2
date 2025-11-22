@@ -37,67 +37,53 @@ export function Camera(){
     };
 
     const tirarFoto = () => {
-        console.log("📸 Botão de tirar foto clicado!");
-        
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        
-        if (!video || !canvas) {
-            console.error("❌ Elementos de vídeo ou canvas não encontrados");
-            return;
-        }
+    console.log("📸 Botão de tirar foto clicado!");
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    if (!video || !canvas) {
+        console.error("❌ Elementos de vídeo ou canvas não encontrados");
+        return;
+    }
 
-        console.log("📐 Dimensões do vídeo:", video.videoWidth, "x", video.videoHeight);
-        
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-            console.error("❌ Vídeo não está pronto para captura");
-            alert("Aguarde a câmera carregar completamente!");
-            return;
-        }
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+        console.error("❌ Vídeo não está pronto para captura");
+        alert("Aguarde a câmera carregar completamente!");
+        return;
+    }
 
-        const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+    // Desenhar a imagem no canvas (espelhada)
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        console.log("🎨 Configurando canvas com:", canvas.width, "x", canvas.height);
+    const imagem = canvas.toDataURL("image/png");
+    
+    setFotoAtual(imagem);
 
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const imagem = canvas.toDataURL("image/png");
-        console.log("🖼️ Data URL gerada (início):", imagem.substring(0, 50) + "...");
-        
-        setFotoAtual(imagem);
-        console.log("✅ Estado fotoAtual atualizado");
-        
-        // SALVAR NO LOCALSTORAGE
-        const fotosExistentes = JSON.parse(localStorage.getItem('fotosTiradas') || '[]');
-        console.log("📁 Fotos existentes no localStorage:", fotosExistentes.length);
-        
-        const novaFoto = {
-            id: Date.now(),
-            src: imagem,
-            data: new Date().toLocaleString('pt-BR')
-        };
-        
-        const novasFotos = [...fotosExistentes, novaFoto];
-        localStorage.setItem('fotosTiradas', JSON.stringify(novasFotos));
-        
-        console.log('💾 Foto salva no localStorage!');
-        console.log('📊 Total de fotos agora:', novasFotos.length);
-        console.log('🆔 ID da nova foto:', novaFoto.id);
-        
-        // ⭐ DISPARA EVENTO CUSTOMIZADO PARA NOTIFICAR A GALERIA
-        const evento = new CustomEvent('fotoAdicionada', { 
-            detail: { foto: novaFoto, total: novasFotos.length } 
-        });
-        window.dispatchEvent(evento);
-        console.log('📢 Evento "fotoAdicionada" disparado!');
-        
-        const verificar = JSON.parse(localStorage.getItem('fotosTiradas') || '[]');
-        console.log('🔍 Verificação - Fotos no localStorage após salvar:', verificar.length);
+    // ✅ **MELHOR FORMA DE SALVAR E SINCRONIZAR**
+    const novaFoto = {
+        id: Date.now(),
+        src: imagem,
+        data: new Date().toLocaleString('pt-BR')
+    };
+    
+    // Obter fotos existentes
+    const fotosExistentes = JSON.parse(localStorage.getItem('fotosTiradas') || '[]');
+    const novasFotos = [...fotosExistentes, novaFoto];
+    
+    // Salvar no localStorage
+    localStorage.setItem('fotosTiradas', JSON.stringify(novasFotos));
+    
+    console.log('💾 Foto salva! Total:', novasFotos.length);
+    
+    // ✅ **DISPARAR EVENTO SIMPLES E EFICIENTE**
+    window.dispatchEvent(new Event('fotosAtualizadas'));
     }
 
     const reiniciarCamera = () => {

@@ -1,6 +1,8 @@
+// MissaoModal.jsx
 import { useState } from "react";
 import sucesso from "../assets/win.png";
 import erro from "../assets/raios.png";
+import { recompensas } from '../Dados/recompensas';
 
 export function MissaoModal({ missao, onClose, onConcluir }) {
   const [resposta, setResposta] = useState("");
@@ -13,17 +15,38 @@ export function MissaoModal({ missao, onClose, onConcluir }) {
       return;
     }
 
-    if (
-      resposta.trim().toLowerCase() ===
-      missao.respostaCorreta.trim().toLowerCase()
-    ) {
+    if (resposta.trim().toLowerCase() === missao.respostaCorreta.trim().toLowerCase()) {
       setResultado("Resposta correta! Parabéns!");
       setStatus("sucesso");
 
-      // ✅ chama a função de concluir após 1s (tempo para mostrar feedback)
+      // ✅ Salvar missão concluída
+      const missoesSalvas = JSON.parse(localStorage.getItem('missoesConcluidas') || '[]');
+      if (!missoesSalvas.includes(missao.id)) {
+        localStorage.setItem('missoesConcluidas', JSON.stringify([...missoesSalvas, missao.id]));
+      }
+
+      // ✅ DAR RECOMPENSA NO INVENTÁRIO
+      const inventario = JSON.parse(localStorage.getItem('inventario') || '[]');
+      const recompensa = recompensas[missao.id];
+      
+      if (recompensa && !inventario.find(item => item.id === recompensa.id)) {
+        const novaRecompensa = {
+          ...recompensa,
+          dataConquista: new Date().toLocaleString('pt-BR'),
+          missaoId: missao.id
+        };
+        
+        const novoInventario = [...inventario, novaRecompensa];
+        localStorage.setItem('inventario', JSON.stringify(novoInventario));
+        console.log('🎁 Recompensa adicionada ao inventário:', recompensa.nome);
+        
+        // Disparar evento para atualizar o inventário
+        window.dispatchEvent(new Event('inventarioAtualizado'));
+      }
+
       setTimeout(() => {
         onConcluir(missao.id);
-      }, 1000);
+      }, 2000);
     } else {
       setResultado("Resposta incorreta. Tente novamente!");
       setStatus("erro");
@@ -59,11 +82,16 @@ export function MissaoModal({ missao, onClose, onConcluir }) {
         <div className="resultado">
           <p>{resultado}</p>
           {status === "sucesso" && (
-            <img
-              src={sucesso}
-              alt="Missão concluída com sucesso"
-              width="100"
-            />
+            <div>
+              <img
+                src={sucesso}
+                alt="Missão concluída com sucesso"
+                width="100"
+              />
+              <p style={{marginTop: '10px', fontWeight: 'bold', color: '#4CAF50'}}>
+                🎁 Você ganhou: {recompensas[missao.id]?.nome}
+              </p>
+            </div>
           )}
           {status === "erro" && (
             <img
