@@ -1,4 +1,4 @@
-import logo from '../assets/logo.jpg';
+import logo from '../assets/dsgoinicio.png';
 import { useNavigate } from 'react-router-dom';
 
 export function Inicial() {

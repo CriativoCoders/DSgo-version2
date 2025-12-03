@@ -1,11 +1,17 @@
+/* ====== FONTE ESTILO STRANGER THINGS ====== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Cinzel', serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Paleta Mundo Invertido */
+  color: rgba(255, 50, 50, 0.9);
+  background-color: #0b0000;
+
+  /* Neon suave */
+  text-shadow: 0 0 8px #ff000099;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,56 +19,82 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ====== LINKS ====== */
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  font-weight: 600;
+  color: #ff1e1e;
+  text-decoration: none;
+  text-shadow: 0 0 6px #ff0000aa;
+  transition: 0.3s;
 }
 
+a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 12px #ff0000, 0 0 18px #ff3030;
+}
+
+/* ====== BODY MUNDO INVERTIDO ====== */
 body {
   margin: 0;
   display: flex;
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+
+  /* Efeito glow do ambiente */
+  background: radial-gradient(circle at center, #1a0000, #000000 80%);
+  box-shadow: inset 0 0 200px #300000aa;
 }
 
+/* ====== TÍTULOS ====== */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  color: #ff2a2a;
+  text-shadow: 0 0 10px #ff0000, 0 0 20px #a30000;
 }
 
+/* ====== BOTÕES ESTILO STRANGER ====== */
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid #8b0000;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  font-weight: 700;
+  font-family: 'Cinzel', serif;
+
+  background-color: #1a0000;
+  color: #ff4b4b;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: 0.3s;
+  text-shadow: 0 0 6px #ff0000aa;
+  box-shadow: 0 0 15px #8b000055;
 }
 
+button:hover {
+  border-color: #ff0000;
+  box-shadow: 0 0 25px #ff0000aa;
+  transform: translateY(-2px);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 3px solid #ff4d4d;
+}
+
+/* ====== MODO CLARO (DESATIVADO, MAS PRESERVADO) ====== */
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: #330000;
+    background-color: #fff0f0;
   }
+
   a:hover {
-    color: #747bff;
+    color: #ff1a1a;
   }
+
   button {
-    background-color: #f9f9f9;
+    background-color: #ffdddd;
+    color: #660000;
   }
 }

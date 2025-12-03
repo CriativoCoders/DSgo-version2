@@ -1,30 +1,50 @@
+/* ======== CONFIGURAÇÃO GERAL ======== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: radial-gradient(circle at center, #0a0a0a, #000000 80%);
+  color: #f2f2f2;
+  font-family: 'Cinzel', serif;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* ======== ÁREA ROOT ======== */
 #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  border: 2px solid #8b0000;
+  border-radius: 10px;
+  box-shadow: 0 0 25px #8b0000aa;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(4px);
 }
 
+/* ======== LOGO COM EFEITO “NEON VERMELHO” ======== */
 .logo {
   height: 6em;
   padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  transition: all 0.3s ease-in-out;
+  filter: drop-shadow(0 0 10px #8b0000);
 }
 
+.logo:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 25px #ff0000);
+}
+
+/* ======== ANIMAÇÃO ROTATIVA ======== */
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -33,10 +53,38 @@
   }
 }
 
+/* ======== CARTÃO ======== */
 .card {
   padding: 2em;
+  border: 1px solid #8b0000;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+  background: rgba(20, 0, 0, 0.3);
+  box-shadow: 0 0 15px #8b000055;
+  transition: 0.3s;
 }
 
+.card:hover {
+  box-shadow: 0 0 25px #ff0000aa;
+  transform: translateY(-4px);
+}
+
+/* ======== TEXTO SECUNDÁRIO ======== */
 .read-the-docs {
-  color: #888;
+  color: #ff4444;
+  text-shadow: 0 0 7px #ff0000;
+  font-style: italic;
+}
+
+/* ======== LINKS ======== */
+a {
+  color: #ff1a1a;
+  text-decoration: none;
+  font-weight: bold;
+  text-shadow: 0 0 5px #ff0000aa;
+}
+
+a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 10px #ff0000, 0 0 15px #ff3b3b;
 }
