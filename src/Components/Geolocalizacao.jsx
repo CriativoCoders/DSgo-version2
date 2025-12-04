@@ -1,219 +1,169 @@
-// Components/Geolocalizacao.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 export function Geolocalizacao() {
-  const [localizacao, setLocalizacao] = useState(null);
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState(null);
-  const [historico, setHistorico] = useState([]);
+  const mapRef = useRef(null);
+  const rotaRef = useRef(null);
 
-  // Carregar histórico do localStorage
+  const [form, setForm] = useState({
+    lat1: "",
+    lng1: "",
+    lat2: "",
+    lng2: ""
+  });
+
+  const [erros, setErros] = useState({});
+
+  // Inicializar mapa
   useEffect(() => {
-    const historicoSalvo = JSON.parse(localStorage.getItem('historicoGeolocalizacao') || '[]');
-    setHistorico(historicoSalvo);
+    if (mapRef.current) return;
+
+    const mapa = L.map("mapa").setView([-23.55, -46.63], 13);
+    mapRef.current = mapa;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+    }).addTo(mapa);
   }, []);
 
-  const obterLocalizacao = () => {
-    setCarregando(true);
-    setErro(null);
+  // Validar campos
+  function validarCampos() {
+    let temp = {};
 
-    if (!navigator.geolocation) {
-      setErro("Geolocalização não é suportada pelo seu navegador.");
-      setCarregando(false);
-      return;
-    }
+    if (!form.lat1) temp.lat1 = "Informe a latitude de origem.";
+    if (!form.lng1) temp.lng1 = "Informe a longitude de origem.";
+    if (!form.lat2) temp.lat2 = "Informe a latitude de destino.";
+    if (!form.lng2) temp.lng2 = "Informe a longitude de destino.";
 
-    const opcoes = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000
-    };
+    setErros(temp);
+    return Object.keys(temp).length === 0;
+  }
 
-    navigator.geolocation.getCurrentPosition(
-      // Sucesso
-      (posicao) => {
-        const { latitude, longitude } = posicao.coords;
-        const novaLocalizacao = {
-          latitude,
-          longitude,
-          timestamp: new Date().toLocaleString('pt-BR'),
-          precisao: posicao.coords.accuracy
-        };
+  // Gerar rota
+  function gerarRota(e) {
+    e.preventDefault();
+    if (!validarCampos()) return;
 
-        setLocalizacao(novaLocalizacao);
-        setCarregando(false);
+    const p1 = L.latLng(parseFloat(form.lat1), parseFloat(form.lng1));
+    const p2 = L.latLng(parseFloat(form.lat2), parseFloat(form.lng2));
 
-        // Salvar no histórico
-        const novoHistorico = [novaLocalizacao, ...historico.slice(0, 9)]; // Mantém apenas 10 registros
-        setHistorico(novoHistorico);
-        localStorage.setItem('historicoGeolocalizacao', JSON.stringify(novoHistorico));
+    if (rotaRef.current) rotaRef.current.remove();
 
-        console.log('📍 Localização obtida:', novaLocalizacao);
-      },
-      // Erro
-      (erro) => {
-        setCarregando(false);
-        switch (erro.code) {
-          case erro.PERMISSION_DENIED:
-            setErro("Permissão de localização negada. Por favor, permita o acesso à localização.");
-            break;
-          case erro.POSITION_UNAVAILABLE:
-            setErro("Localização indisponível no momento.");
-            break;
-          case erro.TIMEOUT:
-            setErro("Tempo limite excedido ao obter localização.");
-            break;
-          default:
-            setErro("Erro desconhecido ao obter localização.");
-        }
-      },
-      opcoes
-    );
-  };
+    rotaRef.current = L.Routing.control({
+      waypoints: [p1, p2],
+      show: false,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      lineOptions: { addWaypoints: false },
+    }).addTo(mapRef.current);
 
-  const limparHistorico = () => {
-    if (window.confirm("Deseja limpar o histórico de localizações?")) {
-      setHistorico([]);
-      localStorage.removeItem('historicoGeolocalizacao');
-    }
-  };
+    mapRef.current.setView(p1, 15);
+  }
 
-  const abrirNoGoogleMaps = (lat, lng) => {
-    const url = `https://www.google.com/maps?q=${lat},${lng}`;
-    window.open(url, '_blank');
-  };
-
-  const copiarCoordenadas = (lat, lng) => {
-    const texto = `${lat}, ${lng}`;
-    navigator.clipboard.writeText(texto)
-      .then(() => {
-        alert('Coordenadas copiadas para a área de transferência!');
-      })
-      .catch(() => {
-        alert('Erro ao copiar coordenadas.');
+  // Localização atual - Origem
+  function pegarLocalizacaoOrigem() {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setForm({
+        ...form,
+        lat1: pos.coords.latitude.toFixed(6),
+        lng1: pos.coords.longitude.toFixed(6),
       });
-  };
+    });
+  }
+
+  // Localização atual - Destino
+  function pegarLocalizacaoDestino() {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setForm({
+        ...form,
+        lat2: pos.coords.latitude.toFixed(6),
+        lng2: pos.coords.longitude.toFixed(6),
+      });
+    });
+  }
 
   return (
-    <main className="conteiner">
-      <section className="geolocalizacao">
-        <h2>🗺️ Geolocalização</h2>
-        
-        <div className="geolocalizacao-info">
-          <p>Obtenha sua localização atual e visualize no mapa.</p>
-          
-          <button 
-            onClick={obterLocalizacao} 
-            disabled={carregando}
-            className="btn-obter-localizacao"
+    <div className="sessao-mapa">
+      <form className="form-mapa" onSubmit={gerarRota}>
+        <h2>Gerar Rota</h2>
+
+        <fieldset>
+          <legend>Origem</legend>
+
+          <label>Latitude</label>
+          <input
+            type="number"
+            name="lat1"
+            step="any"
+            value={form.lat1}
+            onChange={(e) => setForm({ ...form, lat1: e.target.value })}
+            className="caixaTexto"
+          />
+          {erros.lat1 && <span className="msgErro">{erros.lat1}</span>}
+
+          <label>Longitude</label>
+          <input
+            type="number"
+            name="lng1"
+            step="any"
+            value={form.lng1}
+            onChange={(e) => setForm({ ...form, lng1: e.target.value })}
+            className="caixaTexto"
+          />
+          {erros.lng1 && <span className="msgErro">{erros.lng1}</span>}
+
+          <button
+            type="button"
+            className="bntLocal"
+            onClick={pegarLocalizacaoOrigem}
           >
-            {carregando ? '🔄 Obtendo localização...' : '📍 Obter Minha Localização'}
+            Usar minha localização atual
           </button>
-        </div>
+        </fieldset>
 
-        {erro && (
-          <div className="geolocalizacao-erro">
-            <span className="erro-icone">⚠️</span>
-            <p>{erro}</p>
-          </div>
-        )}
+        <fieldset>
+          <legend>Destino</legend>
 
-        {localizacao && (
-          <div className="geolocalizacao-resultado">
-            <h3>📍 Sua Localização Atual</h3>
-            
-            <div className="coordenadas">
-              <div className="coordenada-item">
-                <strong>Latitude:</strong>
-                <span>{localizacao.latitude.toFixed(6)}</span>
-              </div>
-              <div className="coordenada-item">
-                <strong>Longitude:</strong>
-                <span>{localizacao.longitude.toFixed(6)}</span>
-              </div>
-              <div className="coordenada-item">
-                <strong>Precisão:</strong>
-                <span>±{Math.round(localizacao.precisao)} metros</span>
-              </div>
-              <div className="coordenada-item">
-                <strong>Horário:</strong>
-                <span>{localizacao.timestamp}</span>
-              </div>
-            </div>
+          <label>Latitude</label>
+          <input
+            type="number"
+            name="lat2"
+            step="any"
+            value={form.lat2}
+            onChange={(e) => setForm({ ...form, lat2: e.target.value })}
+            className="caixaTexto"
+          />
+          {erros.lat2 && <span className="msgErro">{erros.lat2}</span>}
 
-            <div className="acoes-localizacao">
-              <button 
-                onClick={() => abrirNoGoogleMaps(localizacao.latitude, localizacao.longitude)}
-                className="btn-mapa"
-              >
-                🗺️ Abrir no Google Maps
-              </button>
-              <button 
-                onClick={() => copiarCoordenadas(localizacao.latitude, localizacao.longitude)}
-                className="btn-copiar"
-              >
-                📋 Copiar Coordenadas
-              </button>
-            </div>
+          <label>Longitude</label>
+          <input
+            type="number"
+            name="lng2"
+            step="any"
+            value={form.lng2}
+            onChange={(e) => setForm({ ...form, lng2: e.target.value })}
+            className="caixaTexto"
+          />
+          {erros.lng2 && <span className="msgErro">{erros.lng2}</span>}
 
-            {/* Mapa estático (opcional) */}
-            <div className="mapa-estatico">
-              <img 
-                src={`https://maps.googleapis.com/maps/api/staticmap?center=${localizacao.latitude},${localizacao.longitude}&zoom=15&size=400x200&markers=color:red%7C${localizacao.latitude},${localizacao.longitude}&key=YOUR_API_KEY`}
-                alt="Mapa da localização"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
-                }}
-              />
-              <div className="mapa-placeholder">
-                <span>🗺️</span>
-                <p>Visualize a localização no Google Maps</p>
-              </div>
-            </div>
-          </div>
-        )}
+          <button
+            type="button"
+            className="bntLocal"
+            onClick={pegarLocalizacaoDestino}
+          >
+            Usar minha localização atual
+          </button>
+        </fieldset>
 
-        {historico.length > 0 && (
-          <div className="geolocalizacao-historico">
-            <div className="historico-header">
-              <h3>📊 Histórico de Localizações</h3>
-              <button onClick={limparHistorico} className="btn-limpar-historico">
-                🗑️ Limpar
-              </button>
-            </div>
-            
-            <div className="lista-historico">
-              {historico.map((item, index) => (
-                <div key={index} className="item-historico">
-                  <div className="historico-info">
-                    <span className="coordenadas-historico">
-                      {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
-                    </span>
-                    <span className="timestamp-historico">{item.timestamp}</span>
-                  </div>
-                  <div className="historico-acoes">
-                    <button 
-                      onClick={() => abrirNoGoogleMaps(item.latitude, item.longitude)}
-                      className="btn-historico-mapa"
-                      title="Abrir no mapa"
-                    >
-                      🗺️
-                    </button>
-                    <button 
-                      onClick={() => copiarCoordenadas(item.latitude, item.longitude)}
-                      className="btn-historico-copiar"
-                      title="Copiar coordenadas"
-                    >
-                      📋
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-    </main>
+        <button type="submit" className="bntGerar">
+          Gerar Rota
+        </button>
+      </form>
+
+      <div id="mapa" className="mapa-container"></div>
+    </div>
   );
 }
