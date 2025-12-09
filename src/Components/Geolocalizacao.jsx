@@ -4,6 +4,18 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
+// Corrige o bug do ícone padrão do Leaflet não aparecer
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import iconRetina from "leaflet/dist/images/marker-icon-2x.png";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: iconRetina,
+  iconUrl,
+  shadowUrl: iconShadow,
+});
+
 export function Geolocalizacao() {
   const mapRef = useRef(null);
   const rotaRef = useRef(null);
@@ -26,6 +38,7 @@ export function Geolocalizacao() {
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
+      attribution: "© OpenStreetMap contributors",
     }).addTo(mapa);
   }, []);
 
@@ -50,38 +63,49 @@ export function Geolocalizacao() {
     const p1 = L.latLng(parseFloat(form.lat1), parseFloat(form.lng1));
     const p2 = L.latLng(parseFloat(form.lat2), parseFloat(form.lng2));
 
-    if (rotaRef.current) rotaRef.current.remove();
+    if (!mapRef.current) return;
 
+    // Remove rota antiga
+    if (rotaRef.current) {
+      mapRef.current.removeControl(rotaRef.current);
+    }
+
+    // Cria nova rota
     rotaRef.current = L.Routing.control({
       waypoints: [p1, p2],
-      show: false,
+      showAlternatives: false,
       addWaypoints: false,
+      routeWhileDragging: false,
       draggableWaypoints: false,
-      lineOptions: { addWaypoints: false },
+      createMarker: function() { return null; },
+      lineOptions: {
+        addWaypoints: false
+      }
     }).addTo(mapRef.current);
 
+    // Centraliza no ponto inicial
     mapRef.current.setView(p1, 15);
   }
 
   // Localização atual - Origem
   function pegarLocalizacaoOrigem() {
     navigator.geolocation.getCurrentPosition((pos) => {
-      setForm({
-        ...form,
+      setForm((prev) => ({
+        ...prev,
         lat1: pos.coords.latitude.toFixed(6),
         lng1: pos.coords.longitude.toFixed(6),
-      });
+      }));
     });
   }
 
   // Localização atual - Destino
   function pegarLocalizacaoDestino() {
     navigator.geolocation.getCurrentPosition((pos) => {
-      setForm({
-        ...form,
+      setForm((prev) => ({
+        ...prev,
         lat2: pos.coords.latitude.toFixed(6),
         lng2: pos.coords.longitude.toFixed(6),
-      });
+      }));
     });
   }
 
@@ -115,11 +139,7 @@ export function Geolocalizacao() {
           />
           {erros.lng1 && <span className="msgErro">{erros.lng1}</span>}
 
-          <button
-            type="button"
-            className="bntLocal"
-            onClick={pegarLocalizacaoOrigem}
-          >
+          <button type="button" className="bntLocal" onClick={pegarLocalizacaoOrigem}>
             Usar minha localização atual
           </button>
         </fieldset>
@@ -149,18 +169,12 @@ export function Geolocalizacao() {
           />
           {erros.lng2 && <span className="msgErro">{erros.lng2}</span>}
 
-          <button
-            type="button"
-            className="bntLocal"
-            onClick={pegarLocalizacaoDestino}
-          >
+          <button type="button" className="bntLocal" onClick={pegarLocalizacaoDestino}>
             Usar minha localização atual
           </button>
         </fieldset>
 
-        <button type="submit" className="bntGerar">
-          Gerar Rota
-        </button>
+        <button type="submit" className="bntGerar">Gerar Rota</button>
       </form>
 
       <div id="mapa" className="mapa-container"></div>

@@ -1,84 +1,126 @@
 @use './variaveis' as *;
 
-/* CONTAINER PRINCIPAL */
+/* ============================ */
+/*     ESTILO STRANGER THINGS   */
+/* ============================ */
+
+/* Fundo + contêiner principal */
 .conteiner {
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
   padding: 3rem 2rem;
   border-radius: 20px;
-  color: #dfcaf9;
   max-width: 1200px;
   margin: 2rem auto 7rem auto;
-  overflow-y: auto;
   max-height: 80vh;
-  /* scroll controlado */
+  overflow-y: auto;
+  color: $destaque-rosa;
+
+  /* Borda neon */
+  border: 2px solid rgba(255, 0, 0, 0.4);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.7), inset 0 0 15px rgba(255, 0, 0, 0.4);
 
   /* scroll estilizado */
   scrollbar-width: thin;
-  scrollbar-color:$destaque-rosa;
+  scrollbar-color: $destaque-rosa #000;
+
   &::-webkit-scrollbar {
     width: 8px;
   }
-
   &::-webkit-scrollbar-thumb {
     background-color: $destaque-rosa;
     border-radius: 10px;
+    box-shadow: 0 0 8px $destaque-rosa;
   }
-
   &::-webkit-scrollbar-track {
     background: transparent;
   }
 }
 
-/* TÍTULO */
+/* ============================ */
+/*            TÍTULO            */
+/* ============================ */
+
 .conteiner h2 {
   text-align: center;
   margin-bottom: 1rem;
-  font-size: 2rem;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 2.5rem;
+  font-family: 'Times New Roman', serif;
+  color: #ff1a1a;
+  letter-spacing: 2px;
+
+  /* Glow vermelho */
+  text-shadow:
+    0 0 10px #ff0000,
+    0 0 20px #ff0000,
+    0 0 40px #ff1a1a;
 }
 
-/* GRID DE MISSÕES */
+/* ============================ */
+/*         GRID MISSÕES         */
+/* ============================ */
+
 .missoes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
 }
 
-/* CARD */
+/* ============================ */
+/*           MISSÃO CARD        */
+/* ============================ */
+
 .missao-card {
-  background-color:$card;
-  color: #222;
+  background-color: #12010f;
+  color: #ffe6e6;
   border-radius: 16px;
-  overflow: hidden;
+  padding: 1.5rem;
+  min-height: 220px;
+  font-family: 'Times New Roman', serif;
+  font-size: 18px;
+
+  /* bordas brilhando */
+  border: 2px solid rgba(255, 0, 0, 0.4);
+  box-shadow:
+    0 0 15px rgba(255, 0, 0, 0.6),
+    inset 0 0 10px rgba(255, 0, 0, 0.3);
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  padding: 1.5rem;
-  min-height: 220px;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
-  font-size: 18px;
+
+  transition: 0.35s ease;
 }
 
+/* Hover estilo Stranger Things */
 .missao-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 0 30px rgba(255, 0, 0, 0.9),
+    inset 0 0 20px rgba(255, 0, 0, 0.6);
+  filter: brightness(1.15);
 }
 
-/* TEXTO */
+/* Títulos dos cards */
 .missao-card h3 {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  color: #ff1a1a;
+  letter-spacing: 1px;
+  text-shadow:
+    0 0 8px #ff0000,
+    0 0 20px #ff1a1a;
 }
 
+/* Texto */
 .missao-card p {
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
+/* Destaque dentro do card */
 .missao-card .conteudo {
   font-weight: bold;
-  font-size: 1rem;
+  color: #ff4d4d;
+  font-size: 1.1rem;
   margin-bottom: 0.5rem;
-  color: #9a1b41;
+  text-shadow: 0 0 5px #ff4d4d;
 }
